@@ -221,7 +221,7 @@ export const PaginaInicial: React.FC = () => {
         });
         client.on('error', (err) => {
             console.error("Erro MQTT:", err);
-            setMqttStatus('Desconectado');
+            // setMqttStatus('Desconectado');
         });
 
     }, []);

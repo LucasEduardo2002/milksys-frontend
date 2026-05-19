@@ -97,8 +97,8 @@ export const BoletimLeite: React.FC = () => {
   const [filtroData, setFiltroData] = useState('');
 
   // --- Estados MQTT ---
-  const [mqttStatus, setMqttStatus] = useState<'Conectado' | 'Desconectado'>('Desconectado');
-  const [metrics, setMetrics] = useState({ leite: '' });
+  // const [mqttStatus, setMqttStatus] = useState<'Conectado' | 'Desconectado'>('Desconectado');
+  // const [metrics, setMetrics] = useState({ leite: '' });
   // 1. Novo estado para a fila
   const [filaEspera, setFilaEspera] = useState<ProdutorData[]>([]);
 
@@ -324,7 +324,7 @@ export const BoletimLeite: React.FC = () => {
 
   const handleGerarPDF = () => {
     const registrosParaPDF = Object.values(historicoFiltrado).flat();
-    if (registrosParaPDF.length > 0) gerarPDFBoletim(registrosParaPDF);
+    if (registrosParaPDF.length > 0) gerarPDF(registrosParaPDF);
     else showSnackbar('Nenhum dado encontrado para o filtro aplicado.', 'warning');
   };
 
