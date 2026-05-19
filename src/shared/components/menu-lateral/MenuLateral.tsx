@@ -15,7 +15,7 @@ const ListItemLink: React.FC<IListItemLinkProps> = ({ to, icon, label, onClick }
     const resolvedPath = useResolvedPath(to);
     const match = useMatch({ path: resolvedPath.pathname, end: false });
 
-    const handleClick = () => {
+    const _handleClick = () => {
         navigate(to);
         onClick?.();
     };

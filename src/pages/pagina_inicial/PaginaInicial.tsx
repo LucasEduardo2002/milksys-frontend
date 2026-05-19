@@ -43,9 +43,9 @@ export const PaginaInicial: React.FC = () => {
     const registrosSalvosRef = React.useRef<RowData[]>([]);
     const [produtores, setProdutores] = React.useState<IProdutor[]>([]);
     const { showSnackbar } = useSnackbar();
-    const [busca, setBusca] = React.useState('');
+    const [busca] = React.useState('');
     const mqttClientRef = React.useRef<mqtt.MqttClient | null>(null);
-    const [mqttStatus, setMqttStatus] = React.useState<'Conectado' | 'Desconectado'>('Desconectado');
+    // const [mqttStatus, setMqttStatus] = React.useState<'Conectado' | 'Desconectado'>('Desconectado');
     const formStateRef = React.useRef(formState);
     const [filtroProdutor, setFiltroProdutor] = React.useState<IProdutor | null>(null);
     const filaRef = React.useRef<{ id: number; nome: string }[]>([]);
@@ -186,10 +186,10 @@ export const PaginaInicial: React.FC = () => {
 
         client.on('connect', () => {
             console.log('✅ MQTT conectado');
-            setMqttStatus('Conectado');
+            // setMqttStatus('Conectado');
             client.subscribe('sertao_serido/leite');
         });
-        client.on("message", async (topic, message) => {
+        client.on("message", async (_topic, message) => {
 
             const dados = JSON.parse(message.toString());
             console.log("📥 Recebido da balança:", dados);

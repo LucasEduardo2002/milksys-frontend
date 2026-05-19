@@ -12,7 +12,7 @@ import { LayoutBaseDePagina } from '../shared/layouts';
 import { Api } from '../shared/services/api/axios-config';
 import { useSnackbar } from '../shared/contexts/SnackbarProvider';
 import type { ProdutorData } from './CadastrarProdutor';
-import { gerarPDFBoletim } from '../shared/contexts/utils/gerarPDF';
+import { gerarPDF } from '../shared/contexts/utils/gerarPDF';
 import mqtt from 'mqtt';
 
 // Interface para registros do histórico
