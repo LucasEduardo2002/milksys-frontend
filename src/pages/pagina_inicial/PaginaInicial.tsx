@@ -178,7 +178,7 @@ export const PaginaInicial: React.FC = () => {
     React.useEffect(() => {
         if (mqttClientRef.current) return;
 
-        const client = mqtt.connect('ws://localhost:8082/mqtt', {
+        const client = mqtt.connect('ws://10.1.1.33:8082/mqtt', {
             reconnectPeriod: 5000,
         });
 

@@ -116,7 +116,7 @@ export const BoletimLeite: React.FC = () => {
       });
 
       // Publica em um tópico que a BitDogLab está inscrita
-      const client = mqtt.connect('ws://localhost:8082/mqtt');
+      const client = mqtt.connect('ws://10.1.1.33:8082/mqtt');
 
       client.on('connect', () => {
         console.log('✅ WS conectado');
@@ -168,7 +168,7 @@ export const BoletimLeite: React.FC = () => {
 
   // --- Efeito MQTT (Conexão com BitDogLab) ---
   useEffect(() => {
-    const client = mqtt.connect('ws://localhost:8082', {
+    const client = mqtt.connect('ws://10.1.1.33:8082', {
       reconnectPeriod: 5000,
     });
     mqttClientRef.current = client; // Guarda a referência
