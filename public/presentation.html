@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Recepção - Apresentação</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+        }
+
+        .header img {
+            height: 70px;
+        }
+
+        .data-info {
+            font-size: 1.2em;
+            color: #7f8c8d;
+        }
+
+        .coletas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .coleta-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .coleta-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .coleta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 15px;
+        }
+
+        .coleta-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .coleta-tanque {
+            font-size: 0.9em;
+            color: #95a5a6;
+        }
+
+        .status-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-success {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .status-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .status-error {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .coleta-acidez {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.3em;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .coleta-quantidade {
+            background: #ecf0f1;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .coleta-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+
+        .metric-value {
+            font-size: 1.1em;
+            color: #2c3e50;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2135ce;
+            color: white;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 1.8em;
+            font-weight: bold;
+            border: 3px solid white;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 15px;
+            padding: 60px 30px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 1.5em;
+            color: #95a5a6;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .coleta-card {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Painel de Recepção</h1>
+                <div class="data-info" id="dataInfo">-</div>
+            </div>
+            <img src="/logo3.png" alt="Sertão Seridó" />
+        </div>
+
+        <div class="coletas-grid" id="coletasContainer">
+            <div class="empty-state">
+                <div class="empty-state-icon">🔄</div>
+                <div class="empty-state-text">Aguardando dados...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer" id="totalLeiteDoDia">Total do Dia: - L</div>
+
+    <script>
+        const coletasContainer = document.getElementById('coletasContainer');
+        const dataInfoEl = document.getElementById('dataInfo');
+        const totalLeiteDoDiaEl = document.getElementById('totalLeiteDoDia');
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            return new Intl.DateTimeFormat('pt-BR', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            }).format(date);
+        }
+
+        function renderColetas(coletas, dataFiltro) {
+            if (!coletas || coletas.length === 0) {
+                coletasContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🧪</div>
+                        <div class="empty-state-text">Nenhuma coleta encontrada para a data selecionada.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            dataInfoEl.textContent = formatDate(dataFiltro);
+
+            coletasContainer.innerHTML = coletas.map(coleta => {
+                const isRecruzada = Number(coleta.acidez) > 19;
+                const isAnaliseCompleta = coleta.gordura && coleta.gordura !== '-';
+
+                let statusClass, statusText;
+                if (isRecruzada) {
+                    statusClass = 'status-error';
+                    statusText = 'Coleta Recusada';
+                } else if (isAnaliseCompleta) {
+                    statusClass = 'status-success';
+                    statusText = 'Análise Concluída';
+                } else {
+                    statusClass = 'status-warning';
+                    statusText = 'Aguardando Análise';
+                }
+
+                const getMetricValue = (value) => value && value !== '-' ? value : '-';
+
+                return `
+                    <div class="coleta-card">
+                        <div class="coleta-header">
+                            <div>
+                                <div class="coleta-name">${coleta.nome}</div>
+                                ${coleta.tanque && coleta.tanque !== '-' ? `<div class="coleta-tanque">Tanque: ${coleta.tanque}</div>` : ''}
+                            </div>
+                            <div class="status-chip ${statusClass}">${statusText}</div>
+                        </div>
+                        <div class="coleta-acidez">Acidez: <strong>${coleta.acidez}°D</strong></div>
+                        <div class="coleta-quantidade">Quantidade: ${coleta.leite_bom_qnt || 0}L</div>
+                        <div class="coleta-metrics" style="opacity: ${isAnaliseCompleta ? 1 : 0.5}">
+                            <div class="metric">
+                                <div class="metric-label">Gordura</div>
+                                <div class="metric-value">${getMetricValue(coleta.gordura)}%</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Proteína</div>
+                                <div class="metric-value">${getMetricValue(coleta.proteina)}%</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Densidade</div>
+                                <div class="metric-value">${getMetricValue(coleta.densidade)}</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">ESD</div>
+                                <div class="metric-value">${getMetricValue(coleta.ESD)}%</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Crioscopia</div>
+                                <div class="metric-value">${getMetricValue(coleta.crioscopia)}%</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Lactose</div>
+                                <div class="metric-value">${getMetricValue(coleta.lactose)}%</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Listener para mensagens do apresentador (PainelRecepcao.tsx)
+        window.addEventListener('message', (event) => {
+            const { type, data } = event.data;
+
+            if (type === 'INIT' || type === 'UPDATE') {
+                renderColetas(data.coletas, data.dataFiltro);
+                const totalFormatado = data.totalLeiteDoDia.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                totalLeiteDoDiaEl.textContent = `Total do Dia: ${totalFormatado} L`;
+            }
+        });
+
+        // Listener de desconexão
+        window.addEventListener('pagehide', () => {
+            window.close();
+        });
+    </script>
+</body>
+</html>
