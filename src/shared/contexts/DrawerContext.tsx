@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { useMediaQuery, useTheme } from '@mui/material';
 
 interface IDrawerOption {
   icon: string;
@@ -23,8 +24,14 @@ interface IDrawerProviderProps {
 }
 
 export const DrawerProvider: React.FC<IDrawerProviderProps> = ({ children }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [drawerOptions, setDrawerOptions] = useState<IDrawerOption[]>([]);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(true);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    setIsDrawerOpen(!isMobile);
+  }, [isMobile]);
 
   const toggleDrawerOpen = useCallback(() => {
     setIsDrawerOpen(oldDrawerOpen => !oldDrawerOpen);

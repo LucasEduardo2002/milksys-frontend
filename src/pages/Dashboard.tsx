@@ -1,6 +1,6 @@
 import * as React from "react";
 import { LayoutBaseDePagina } from "../shared/layouts";
-import { Paper, Typography, Card, Box, useTheme, TextField, IconButton, Tooltip } from "@mui/material";
+import { Paper, Typography, Card, Box, useMediaQuery, useTheme, TextField, IconButton, Tooltip } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { Clear } from '@mui/icons-material';
 import { Api } from '../shared/services/api/axios-config';
@@ -17,18 +17,21 @@ interface IColeta {
     proteina: string;
 }
 
-const StatCard: React.FC<{ title: string, value: string | number, icon: React.ReactNode }> = ({ title, value, icon }) => (
+const StatCardBase: React.FC<{ title: string, value: string | number, icon: React.ReactNode, isCompact: boolean }> = ({ title, value, icon, isCompact }) => (
     <Card sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', p: 2, height: '100%', textAlign: 'center' }}>
         <Box sx={{ mb: 1, color: 'primary.main' }}>{icon}</Box>
         <Box>
             <Typography color="text.secondary" variant="body2">{title}</Typography>
-            <Typography variant="h4" component="p" fontWeight="bold">{value}</Typography>
+            <Typography variant={isCompact ? 'h5' : 'h4'} component="p" fontWeight="bold">{value}</Typography>
         </Box>
     </Card>
 );
 
+const StatCard = React.memo(StatCardBase);
+
 export function Dashboard() {
     const theme = useTheme();
+    const isCompact = useMediaQuery(theme.breakpoints.down('md'));
     const [produtores, setProdutores] = React.useState<IProdutor[]>([]);
     const [coletas, setColetas] = React.useState<IColeta[]>([]);
 
@@ -116,33 +119,38 @@ export function Dashboard() {
             .sort((a, b) => b["Nº de Coletas"] - a["Nº de Coletas"]);
     }, [produtores, coletasFiltradas]);
 
+    const chartHeight = isCompact ? 300 : 380;
+
     return (
         <LayoutBaseDePagina titulo="Dashboard" subtitulo="Visão geral e indicadores de qualidade do leite.">
 
-            <Grid container spacing={3}>
-                <Grid item xs={12} sm={6} md={3}><StatCard title="Total de Produtores" value={totalProdutores} icon={<Group fontSize="large" />} /></Grid>
-                <Grid item xs={12} sm={6} md={3}><StatCard title="Média de Acidez" value={mediaAcidez} icon={<Scale fontSize="large" />} /></Grid>
-                <Grid item xs={12} sm={6} md={3}><StatCard title="Média de Gordura" value={mediaGordura} icon={<WaterDrop fontSize="large" />} /></Grid>
-                <Grid item xs={12} sm={6} md={3}><StatCard title="Média de Proteína" value={mediaProteina} icon={<Science fontSize="large" />} /></Grid>
+            <Grid container spacing={{ xs: 1.5, sm: 3 }}>
+                <Grid item xs={12} sm={6} md={3}><StatCard title="Total de Produtores" value={totalProdutores} icon={<Group fontSize="large" />} isCompact={isCompact} /></Grid>
+                <Grid item xs={12} sm={6} md={3}><StatCard title="Média de Acidez" value={mediaAcidez} icon={<Scale fontSize="large" />} isCompact={isCompact} /></Grid>
+                <Grid item xs={12} sm={6} md={3}><StatCard title="Média de Gordura" value={mediaGordura} icon={<WaterDrop fontSize="large" />} isCompact={isCompact} /></Grid>
+                <Grid item xs={12} sm={6} md={3}><StatCard title="Média de Proteína" value={mediaProteina} icon={<Science fontSize="large" />} isCompact={isCompact} /></Grid>
 
                 <Grid item xs={12} marginTop={2}>
-                    <Paper sx={{ p: 3, height: '500px' }} >
+                    <Paper sx={{ p: { xs: 1.5, sm: 2, md: 3 } }} >
                         <Box
                             display="flex"
-                            alignItems="center"
+                            alignItems={{ xs: 'stretch', sm: 'center' }}
                             justifyContent="space-between"
-                            flexWrap="wrap"
-                            gap={2}
+                            flexDirection={{ xs: 'column', sm: 'row' }}
+                            gap={{ xs: 1.5, sm: 2 }}
                             mb={2}
                         >
-                            <Typography variant="h6" gutterBottom>Análise de Coletas por Produtor (Período Selecionado)</Typography>
+                            <Typography variant={isCompact ? 'subtitle1' : 'h6'}>
+                                Análise de Coletas por Produtor (Período Selecionado)
+                            </Typography>
                             {/* --- SEÇÃO DE FILTROS --- */}
-                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', width: { xs: '100%', sm: 'auto' } }}>
                                 
                                 <TextField
                                     label="Data Inicial"
                                     type="date"
                                     size="small"
+                                    sx={{ minWidth: { xs: '100%', sm: 150 } }}
                                     value={dataInicio}
                                     onChange={(e) => setDataInicio(e.target.value)}
                                     InputLabelProps={{ shrink: true }}
@@ -151,6 +159,7 @@ export function Dashboard() {
                                     label="Data Final"
                                     type="date"
                                     size="small"
+                                    sx={{ minWidth: { xs: '100%', sm: 150 } }}
                                     value={dataFim}
                                     onChange={(e) => setDataFim(e.target.value)}
                                     InputLabelProps={{ shrink: true }}
@@ -164,18 +173,27 @@ export function Dashboard() {
                                 )}
                             </Box>
                         </Box>
+                        <Box sx={{ width: '100%', height: chartHeight }}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <ComposedChart data={dataGrafico} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                            <ComposedChart data={dataGrafico} margin={{ top: 20, right: 10, left: isCompact ? -20 : 20, bottom: isCompact ? 20 : 80 }}>
                                 <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} />
+                                <XAxis
+                                    dataKey="name"
+                                    angle={isCompact ? 0 : -45}
+                                    textAnchor={isCompact ? 'middle' : 'end'}
+                                    interval={isCompact ? 'preserveStartEnd' : 0}
+                                    tickMargin={8}
+                                    tickFormatter={(value: string) => isCompact ? value.split(' ')[0] : value}
+                                />
                                 <YAxis yAxisId="left" orientation="left" stroke={theme.palette.info.main} />
                                 <YAxis yAxisId="right" orientation="right" stroke={theme.palette.secondary.main} />
                                 <RechartsTooltip />
-                                <Legend verticalAlign="top" />
-                                <Bar yAxisId="left" dataKey="Nº de Coletas" fill={theme.palette.info.light} />
-                                <Line yAxisId="right" type="monotone" dataKey="Acidez Média" stroke={theme.palette.secondary.main} strokeWidth={2} />
+                                {!isCompact && <Legend verticalAlign="top" />}
+                                <Bar yAxisId="left" dataKey="Nº de Coletas" fill={theme.palette.info.light} isAnimationActive={false} />
+                                <Line yAxisId="right" type="monotone" dataKey="Acidez Média" stroke={theme.palette.secondary.main} strokeWidth={2} isAnimationActive={false} />
                             </ComposedChart>
                         </ResponsiveContainer>
+                        </Box>
                     </Paper>
                 </Grid>
             </Grid>

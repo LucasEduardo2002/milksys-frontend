@@ -13,6 +13,7 @@ import { Api } from '../shared/services/api/axios-config';
 import { useSnackbar } from '../shared/contexts/SnackbarProvider';
 import type { ProdutorData } from './CadastrarProdutor';
 import { gerarPDF } from '../shared/contexts/utils/gerarPDF';
+import { Environment } from '../shared/environment';
 import mqtt from 'mqtt';
 
 // Interface para registros do histórico
@@ -115,13 +116,7 @@ export const BoletimLeite: React.FC = () => {
         id: proximo.id
       });
 
-      // Publica em um tópico que a BitDogLab está inscrita
-      const client = mqtt.connect('ws://10.1.1.33:8082/mqtt');
-
-      client.on('connect', () => {
-        console.log('✅ WS conectado');
-        client.publish('sertao_serido/fila', mensagem, { retain: true });
-      });
+      mqttClientRef.current.publish('sertao_serido/fila', mensagem, { retain: true });
       showSnackbar(`BitDogLab avisada: Aguardando ${proximo.nome}`, 'info');
     }
   };
@@ -168,14 +163,13 @@ export const BoletimLeite: React.FC = () => {
 
   // --- Efeito MQTT (Conexão com BitDogLab) ---
   useEffect(() => {
-    const client = mqtt.connect('ws://10.1.1.33:8082', {
+    const client = mqtt.connect(Environment.MQTT_WS_URL, {
       reconnectPeriod: 5000,
     });
     mqttClientRef.current = client; // Guarda a referência
 
     client.on('connect', () => {
       console.log('✅ MQTT conectado');
-      setMqttStatus('Conectado');
       client.subscribe('sertao_serido/leite');
     });
 
@@ -221,7 +215,7 @@ export const BoletimLeite: React.FC = () => {
       }
     });
 
-    client.on('error', () => setMqttStatus('Desconectado'));
+    client.on('error', () => undefined);
 
     return () => {
       if (client) client.end(true);

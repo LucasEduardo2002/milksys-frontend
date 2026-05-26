@@ -1,5 +1,7 @@
 import React from 'react';
-import { Box, Drawer, Icon, List, ListItemButton, ListItemIcon, ListItemText, useMediaQuery, useTheme, Toolbar } from "@mui/material";
+import { Box, Drawer, Icon, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, useMediaQuery, useTheme } from "@mui/material";
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 import { useDrawerContext } from "../../contexts/DrawerContext";
 import { Link, useMatch, useNavigate, useResolvedPath } from "react-router-dom";
 
@@ -59,18 +61,61 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
     const mdDown = useMediaQuery(theme.breakpoints.down('md'));
     const { isDrawerOpen, drawerOptions, toggleDrawerOpen } = useDrawerContext();
     const drawerWidth = 220;
+    const mobileDrawerWidth = 280;
 
     return (
-        <Box sx={{ display: 'flex' }}>
+        <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100%' }}>
+            {mdDown && !isDrawerOpen && (
+                <IconButton
+                    aria-label="Abrir menu"
+                    onClick={toggleDrawerOpen}
+                    sx={{
+                        position: 'fixed',
+                        left: 8,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        zIndex: theme.zIndex.drawer + 2,
+                        bgcolor: theme.palette.primary.main,
+                        color: theme.palette.primary.contrastText,
+                        boxShadow: 3,
+                        '&:hover': {
+                            bgcolor: theme.palette.primary.dark,
+                        },
+                    }}
+                >
+                    <MenuIcon />
+                </IconButton>
+            )}
+            {mdDown && isDrawerOpen && (
+                <IconButton
+                    aria-label="Fechar menu"
+                    onClick={toggleDrawerOpen}
+                    sx={{
+                        position: 'fixed',
+                        left: 8,
+                        top: 8,
+                        zIndex: theme.zIndex.drawer + 2,
+                        bgcolor: theme.palette.primary.main,
+                        color: theme.palette.primary.contrastText,
+                        boxShadow: 3,
+                        '&:hover': {
+                            bgcolor: theme.palette.primary.dark,
+                        },
+                    }}
+                >
+                    <CloseIcon />
+                </IconButton>
+            )}
             <Drawer
                 variant={mdDown ? 'temporary' : 'permanent'}
-                open={isDrawerOpen}
+                open={mdDown ? isDrawerOpen : true}
                 onClose={toggleDrawerOpen}
+                ModalProps={{ keepMounted: true }}
                 sx={{
-                    width: mdDown ? undefined : drawerWidth,
+                    width: mdDown ? mobileDrawerWidth : drawerWidth,
                     flexShrink: 0,
                     [`& .MuiDrawer-paper`]: {
-                        width: drawerWidth,
+                        width: mdDown ? mobileDrawerWidth : drawerWidth,
                         boxSizing: 'border-box',
                         backgroundColor: theme.palette.primary.main,
                         color: theme.palette.primary.contrastText,
@@ -101,8 +146,10 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    p: 2, // <<< ALTERAÇÃO AQUI: Padding reduzido para dar mais espaço ao conteúdo
-                    height: '100vh',
+                    minWidth: 0,
+                    p: { xs: 1.5, sm: 2, md: 3 },
+                    pt: mdDown ? 2 : 3,
+                    minHeight: '100dvh',
                     overflow: 'auto',
                     backgroundColor: theme.palette.background.default,
                 }}
