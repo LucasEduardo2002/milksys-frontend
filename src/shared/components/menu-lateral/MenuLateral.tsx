@@ -1,9 +1,11 @@
 import React from 'react';
-import { Box, Drawer, Icon, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, Divider, Drawer, Icon, IconButton, List, ListItemButton, ListItemIcon, ListItemText, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { useDrawerContext } from "../../contexts/DrawerContext";
 import { Link, useMatch, useNavigate, useResolvedPath } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface IListItemLinkProps {
     to: string;
@@ -60,8 +62,15 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
     const theme = useTheme();
     const mdDown = useMediaQuery(theme.breakpoints.down('md'));
     const { isDrawerOpen, drawerOptions, toggleDrawerOpen } = useDrawerContext();
+    const { logout, user } = useAuth();
+    const navigate = useNavigate();
     const drawerWidth = 220;
     const mobileDrawerWidth = 280;
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login', { replace: true });
+    };
 
     return (
         <Box sx={{ display: 'flex', minHeight: '100dvh', width: '100%' }}>
@@ -117,6 +126,8 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
                     [`& .MuiDrawer-paper`]: {
                         width: mdDown ? mobileDrawerWidth : drawerWidth,
                         boxSizing: 'border-box',
+                        display: 'flex',
+                        flexDirection: 'column',
                         backgroundColor: theme.palette.primary.main,
                         color: theme.palette.primary.contrastText,
                         borderRight: 'none',
@@ -127,7 +138,7 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
                     <img src="/logo3.png" alt="Sertão Seridó" style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
                 </Toolbar>
 
-                <Box sx={{ overflow: 'auto' }}>
+                <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
                     <List component="nav" sx={{ p: 2 }}>
                         {drawerOptions.map(drawerOption => (
                             <ListItemLink
@@ -139,6 +150,29 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
                             />
                         ))}
                     </List>
+                </Box>
+
+                <Box sx={{ mt: 'auto', p: 2 }}>
+                    <Divider sx={{ borderColor: 'rgba(255,255,255,0.18)', mb: 2 }} />
+                    <Typography variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.8)', mb: 1 }}>
+                        Logado como {user?.username ?? 'usuário'}
+                    </Typography>
+                    <Button
+                        fullWidth
+                        variant="outlined"
+                        startIcon={<LogoutIcon />}
+                        onClick={handleLogout}
+                        sx={{
+                            color: '#fff',
+                            borderColor: 'rgba(255,255,255,0.35)',
+                            '&:hover': {
+                                borderColor: '#fff',
+                                backgroundColor: 'rgba(255,255,255,0.08)',
+                            },
+                        }}
+                    >
+                        Sair
+                    </Button>
                 </Box>
             </Drawer>
 

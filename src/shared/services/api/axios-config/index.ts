@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Environment } from '../../../environment';
+import { UNAUTHORIZED_EVENT } from '../../../contexts/authStorage';
 
 type CachedEntry = {
   expiresAt: number;
@@ -8,6 +9,7 @@ type CachedEntry = {
 
 const Api = axios.create({
   baseURL: Environment.URL_BASE, // URL base do JSON Server
+  withCredentials: true,
 });
 
 const cache = new Map<string, CachedEntry>();
@@ -86,6 +88,10 @@ Api.interceptors.response.use(
   error => {
     // Interceptador de erros
     if (axios.isAxiosError(error)) {
+      if (error.response?.status === 401 && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(UNAUTHORIZED_EVENT));
+      }
+
       console.error('Erro na requisição Axios:', error.message);
       console.error('Status HTTP:', error.response?.status);
     } else {
