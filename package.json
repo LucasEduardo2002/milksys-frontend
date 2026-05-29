@@ -8,6 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
     "json-server": "json-server --watch mock/database.json --port 3001 "
   },
   "dependencies": {
@@ -27,6 +29,7 @@
   "devDependencies": {
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
+    "@playwright/test": "^1.54.2",
     "@vitejs/plugin-react": "^4.2.1",
     "baseline-browser-mapping": "^2.9.6",
     "eslint": "^8.57.0",

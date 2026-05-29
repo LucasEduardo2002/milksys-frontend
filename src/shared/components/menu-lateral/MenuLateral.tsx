@@ -67,8 +67,8 @@ export const MenuLateral: React.FC<IMenuLateralProps> = ({ children }) => {
     const drawerWidth = 220;
     const mobileDrawerWidth = 280;
 
-    const handleLogout = () => {
-        logout();
+    const handleLogout = async () => {
+        await logout();
         navigate('/login', { replace: true });
     };
 
