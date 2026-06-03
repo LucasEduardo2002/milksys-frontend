@@ -1,0 +1,366 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: mqtt-flow.spec.ts >> Fluxo MQTT >> publica a fila e processa o peso até limpar o tópico
+- Location: tests\e2e\mqtt-flow.spec.ts:149:3
+
+# Error details
+
+```
+Test timeout of 120000ms exceeded.
+```
+
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - generic [ref=e6]:
+    - img "Sertão Seridó" [ref=e8]
+    - navigation [ref=e10]:
+      - link "Página inicial" [ref=e11] [cursor=pointer]:
+        - /url: /pagina-inicial
+        - generic [ref=e13]: home
+        - generic [ref=e15]: Página inicial
+      - link "Produtores" [ref=e16] [cursor=pointer]:
+        - /url: /produtores
+        - generic [ref=e18]: group
+        - generic [ref=e20]: Produtores
+      - link "Dashboard" [ref=e21] [cursor=pointer]:
+        - /url: /dashboard
+        - generic [ref=e23]: leaderboard
+        - generic [ref=e25]: Dashboard
+      - link "Painel Recepção" [ref=e26] [cursor=pointer]:
+        - /url: /painel-recepcao
+        - generic [ref=e28]: monitor
+        - generic [ref=e30]: Painel Recepção
+    - generic [ref=e31]:
+      - separator [ref=e32]
+      - generic [ref=e33]: Logado como milk-admin
+      - button "Sair" [ref=e34] [cursor=pointer]:
+        - img [ref=e36]
+        - text: Sair
+  - main [ref=e38]:
+    - generic [ref=e39]:
+      - generic [ref=e40]:
+        - heading "Controle de Qualidade" [level=1] [ref=e41]
+        - paragraph [ref=e42]: Registro de análises do leite
+      - generic [ref=e43]:
+        - heading "Cadastrar Nova Coleta" [level=6] [ref=e44]
+        - generic [ref=e45]:
+          - generic [ref=e48]:
+            - generic: Nome do Produtor
+            - generic [ref=e49]:
+              - combobox "Nome do Produtor" [ref=e50]
+              - group:
+                - generic: Nome do Produtor
+          - generic [ref=e53]:
+            - generic: Tanque
+            - generic [ref=e54]:
+              - textbox "Tanque" [ref=e55]
+              - group:
+                - generic: Tanque
+          - generic [ref=e57]:
+            - generic [ref=e58]: Data
+            - generic [ref=e59]:
+              - textbox "Data" [ref=e60]: 2026-06-01
+              - group:
+                - generic: Data
+          - generic [ref=e62]:
+            - generic: Acidez
+            - generic [ref=e63]:
+              - textbox "Acidez" [ref=e64]
+              - group:
+                - generic: Acidez
+        - generic [ref=e65]:
+          - button "Mais Campos" [ref=e66] [cursor=pointer]:
+            - img [ref=e68]
+            - text: Mais Campos
+          - button "Cadastrar" [active] [ref=e70] [cursor=pointer]: Cadastrar
+      - heading "Fila da Balança (0):" [level=6] [ref=e73]
+      - generic [ref=e74]:
+        - generic [ref=e75]:
+          - heading "Histórico de coletas" [level=6] [ref=e76]
+          - generic [ref=e77]:
+            - generic [ref=e79]:
+              - generic: Filtrar por Produtor
+              - generic [ref=e80]:
+                - combobox "Filtrar por Produtor" [ref=e81]
+                - button "Open" [ref=e83] [cursor=pointer]:
+                  - img [ref=e84]
+                - group:
+                  - generic: Filtrar por Produtor
+            - generic [ref=e86]:
+              - generic [ref=e87]: Data inicial
+              - generic [ref=e88]:
+                - textbox "Data inicial" [ref=e89]
+                - group:
+                  - generic: Data inicial
+            - generic [ref=e90]:
+              - generic [ref=e91]: Data final
+              - generic [ref=e92]:
+                - textbox "Data final" [ref=e93]
+                - group:
+                  - generic: Data final
+            - button "Limpar filtros" [ref=e94] [cursor=pointer]:
+              - img [ref=e95]
+            - button "PDF" [ref=e97] [cursor=pointer]:
+              - img [ref=e99]
+              - text: PDF
+        - table [ref=e102]:
+          - rowgroup [ref=e103]:
+            - row "Ações NOME TANQUE DATA ACIDEZ LEITE BOM (QNT) DENSIDADE GORDURA ESD EST PROTEINA CRIOSCOPIA LACTOSE ALIZAROL OBSERVAÇÕES ANALISTA" [ref=e104]:
+              - columnheader "Ações" [ref=e105]
+              - columnheader "NOME" [ref=e106]
+              - columnheader "TANQUE" [ref=e107]
+              - columnheader "DATA" [ref=e108]
+              - columnheader "ACIDEZ" [ref=e109]
+              - columnheader "LEITE BOM (QNT)" [ref=e110]
+              - columnheader "DENSIDADE" [ref=e111]
+              - columnheader "GORDURA" [ref=e112]
+              - columnheader "ESD" [ref=e113]
+              - columnheader "EST" [ref=e114]
+              - columnheader "PROTEINA" [ref=e115]
+              - columnheader "CRIOSCOPIA" [ref=e116]
+              - columnheader "LACTOSE" [ref=e117]
+              - columnheader "ALIZAROL" [ref=e118]
+              - columnheader "OBSERVAÇÕES" [ref=e119]
+              - columnheader "ANALISTA" [ref=e120]
+          - rowgroup [ref=e121]:
+            - row "Editar Apagar Produtor MQTT mqtt-1780347272347-bed749 T-01 6/1/2026 12 309.40" [ref=e122]:
+              - cell "Editar Apagar" [ref=e123]:
+                - generic [ref=e124]:
+                  - button "Editar" [ref=e125] [cursor=pointer]:
+                    - img [ref=e126]
+                  - button "Apagar" [ref=e128] [cursor=pointer]:
+                    - img [ref=e129]
+              - cell "Produtor MQTT mqtt-1780347272347-bed749" [ref=e131]
+              - cell "T-01" [ref=e132]
+              - cell "6/1/2026" [ref=e133]
+              - cell "12" [ref=e134]
+              - cell "309.40" [ref=e135]
+              - cell [ref=e136]
+              - cell [ref=e137]
+              - cell [ref=e138]
+              - cell [ref=e139]
+              - cell [ref=e140]
+              - cell [ref=e141]
+              - cell [ref=e142]
+              - cell [ref=e143]
+              - cell [ref=e144]
+              - cell [ref=e145]
+            - row "Editar Apagar Produtor MQTT mqtt-1780347039110-beadbb T-01 6/1/2026 12 310.30" [ref=e146]:
+              - cell "Editar Apagar" [ref=e147]:
+                - generic [ref=e148]:
+                  - button "Editar" [ref=e149] [cursor=pointer]:
+                    - img [ref=e150]
+                  - button "Apagar" [ref=e152] [cursor=pointer]:
+                    - img [ref=e153]
+              - cell "Produtor MQTT mqtt-1780347039110-beadbb" [ref=e155]
+              - cell "T-01" [ref=e156]
+              - cell "6/1/2026" [ref=e157]
+              - cell "12" [ref=e158]
+              - cell "310.30" [ref=e159]
+              - cell [ref=e160]
+              - cell [ref=e161]
+              - cell [ref=e162]
+              - cell [ref=e163]
+              - cell [ref=e164]
+              - cell [ref=e165]
+              - cell [ref=e166]
+              - cell [ref=e167]
+              - cell [ref=e168]
+              - cell [ref=e169]
+            - row "Editar Apagar Produtor MQTT mqtt-1780346662252-baed24 T-01 6/1/2026 12 310.10" [ref=e170]:
+              - cell "Editar Apagar" [ref=e171]:
+                - generic [ref=e172]:
+                  - button "Editar" [ref=e173] [cursor=pointer]:
+                    - img [ref=e174]
+                  - button "Apagar" [ref=e176] [cursor=pointer]:
+                    - img [ref=e177]
+              - cell "Produtor MQTT mqtt-1780346662252-baed24" [ref=e179]
+              - cell "T-01" [ref=e180]
+              - cell "6/1/2026" [ref=e181]
+              - cell "12" [ref=e182]
+              - cell "310.10" [ref=e183]
+              - cell [ref=e184]
+              - cell [ref=e185]
+              - cell [ref=e186]
+              - cell [ref=e187]
+              - cell [ref=e188]
+              - cell [ref=e189]
+              - cell [ref=e190]
+              - cell [ref=e191]
+              - cell [ref=e192]
+              - cell [ref=e193]
+            - row "Editar Apagar Pedro 8 6/1/2026 18 342.70" [ref=e194]:
+              - cell "Editar Apagar" [ref=e195]:
+                - generic [ref=e196]:
+                  - button "Editar" [ref=e197] [cursor=pointer]:
+                    - img [ref=e198]
+                  - button "Apagar" [ref=e200] [cursor=pointer]:
+                    - img [ref=e201]
+              - cell "Pedro" [ref=e203]
+              - cell "8" [ref=e204]
+              - cell "6/1/2026" [ref=e205]
+              - cell "18" [ref=e206]
+              - cell "342.70" [ref=e207]
+              - cell [ref=e208]
+              - cell [ref=e209]
+              - cell [ref=e210]
+              - cell [ref=e211]
+              - cell [ref=e212]
+              - cell [ref=e213]
+              - cell [ref=e214]
+              - cell [ref=e215]
+              - cell [ref=e216]
+              - cell [ref=e217]
+            - row "Editar Apagar vagner 3 6/1/2026 18 0.00" [ref=e218]:
+              - cell "Editar Apagar" [ref=e219]:
+                - generic [ref=e220]:
+                  - button "Editar" [ref=e221] [cursor=pointer]:
+                    - img [ref=e222]
+                  - button "Apagar" [ref=e224] [cursor=pointer]:
+                    - img [ref=e225]
+              - cell "vagner" [ref=e227]
+              - cell "3" [ref=e228]
+              - cell "6/1/2026" [ref=e229]
+              - cell "18" [ref=e230]
+              - cell "0.00" [ref=e231]
+              - cell [ref=e232]
+              - cell [ref=e233]
+              - cell [ref=e234]
+              - cell [ref=e235]
+              - cell [ref=e236]
+              - cell [ref=e237]
+              - cell [ref=e238]
+              - cell [ref=e239]
+              - cell [ref=e240]
+              - cell [ref=e241]
+            - row "Editar Apagar LUCAS EDUARDO SILVA DE MEDEIROS 7 6/1/2026 19 342.70" [ref=e242]:
+              - cell "Editar Apagar" [ref=e243]:
+                - generic [ref=e244]:
+                  - button "Editar" [ref=e245] [cursor=pointer]:
+                    - img [ref=e246]
+                  - button "Apagar" [ref=e248] [cursor=pointer]:
+                    - img [ref=e249]
+              - cell "LUCAS EDUARDO SILVA DE MEDEIROS" [ref=e251]
+              - cell "7" [ref=e252]
+              - cell "6/1/2026" [ref=e253]
+              - cell "19" [ref=e254]
+              - cell "342.70" [ref=e255]
+              - cell [ref=e256]
+              - cell [ref=e257]
+              - cell [ref=e258]
+              - cell [ref=e259]
+              - cell [ref=e260]
+              - cell [ref=e261]
+              - cell [ref=e262]
+              - cell [ref=e263]
+              - cell [ref=e264]
+              - cell [ref=e265]
+            - row "Editar Apagar Douglas 9 6/1/2026 19 0.00" [ref=e266]:
+              - cell "Editar Apagar" [ref=e267]:
+                - generic [ref=e268]:
+                  - button "Editar" [ref=e269] [cursor=pointer]:
+                    - img [ref=e270]
+                  - button "Apagar" [ref=e272] [cursor=pointer]:
+                    - img [ref=e273]
+              - cell "Douglas" [ref=e275]
+              - cell "9" [ref=e276]
+              - cell "6/1/2026" [ref=e277]
+              - cell "19" [ref=e278]
+              - cell "0.00" [ref=e279]
+              - cell [ref=e280]
+              - cell [ref=e281]
+              - cell [ref=e282]
+              - cell [ref=e283]
+              - cell [ref=e284]
+              - cell [ref=e285]
+              - cell [ref=e286]
+              - cell [ref=e287]
+              - cell [ref=e288]
+              - cell [ref=e289]
+            - row "Editar Apagar Produtor MQTT mqtt-1780346167602-389da0 T-01 6/1/2026 12 342.60" [ref=e290]:
+              - cell "Editar Apagar" [ref=e291]:
+                - generic [ref=e292]:
+                  - button "Editar" [ref=e293] [cursor=pointer]:
+                    - img [ref=e294]
+                  - button "Apagar" [ref=e296] [cursor=pointer]:
+                    - img [ref=e297]
+              - cell "Produtor MQTT mqtt-1780346167602-389da0" [ref=e299]
+              - cell "T-01" [ref=e300]
+              - cell "6/1/2026" [ref=e301]
+              - cell "12" [ref=e302]
+              - cell "342.60" [ref=e303]
+              - cell [ref=e304]
+              - cell [ref=e305]
+              - cell [ref=e306]
+              - cell [ref=e307]
+              - cell [ref=e308]
+              - cell [ref=e309]
+              - cell [ref=e310]
+              - cell [ref=e311]
+              - cell [ref=e312]
+              - cell [ref=e313]
+            - row "Editar Apagar Produtor MQTT mqtt-1780345934008-20648d T-01 6/1/2026 12 342.50" [ref=e314]:
+              - cell "Editar Apagar" [ref=e315]:
+                - generic [ref=e316]:
+                  - button "Editar" [ref=e317] [cursor=pointer]:
+                    - img [ref=e318]
+                  - button "Apagar" [ref=e320] [cursor=pointer]:
+                    - img [ref=e321]
+              - cell "Produtor MQTT mqtt-1780345934008-20648d" [ref=e323]
+              - cell "T-01" [ref=e324]
+              - cell "6/1/2026" [ref=e325]
+              - cell "12" [ref=e326]
+              - cell "342.50" [ref=e327]
+              - cell [ref=e328]
+              - cell [ref=e329]
+              - cell [ref=e330]
+              - cell [ref=e331]
+              - cell [ref=e332]
+              - cell [ref=e333]
+              - cell [ref=e334]
+              - cell [ref=e335]
+              - cell [ref=e336]
+              - cell [ref=e337]
+            - row "Editar Apagar Produtor MQTT mqtt-1780345503482-daa166 T-01 6/1/2026 12 342.60" [ref=e338]:
+              - cell "Editar Apagar" [ref=e339]:
+                - generic [ref=e340]:
+                  - button "Editar" [ref=e341] [cursor=pointer]:
+                    - img [ref=e342]
+                  - button "Apagar" [ref=e344] [cursor=pointer]:
+                    - img [ref=e345]
+              - cell "Produtor MQTT mqtt-1780345503482-daa166" [ref=e347]
+              - cell "T-01" [ref=e348]
+              - cell "6/1/2026" [ref=e349]
+              - cell "12" [ref=e350]
+              - cell "342.60" [ref=e351]
+              - cell [ref=e352]
+              - cell [ref=e353]
+              - cell [ref=e354]
+              - cell [ref=e355]
+              - cell [ref=e356]
+              - cell [ref=e357]
+              - cell [ref=e358]
+              - cell [ref=e359]
+              - cell [ref=e360]
+              - cell [ref=e361]
+            - row "Total 18863.90" [ref=e362]:
+              - cell [ref=e363]
+              - cell "Total 18863.90" [ref=e364]:
+                - strong [ref=e365]: Total 18863.90
+              - cell [ref=e366]
+        - generic [ref=e368]:
+          - paragraph [ref=e369]: 1–10 de 206
+          - generic [ref=e370]:
+            - button "Go to previous page" [disabled]:
+              - img
+            - button "Go to next page" [ref=e371] [cursor=pointer]:
+              - img [ref=e372]
+```

@@ -3,7 +3,6 @@ import {
     Paper, TextField, Button, Box, Typography, Autocomplete, IconButton,
     Tooltip, Grid, Dialog, DialogTitle, DialogContent, DialogActions, TablePagination
 } from '@mui/material';
-import type { MqttClient } from 'mqtt';
 import * as React from 'react';
 import Clear from '@mui/icons-material/Clear';
 import AddIcon from '@mui/icons-material/Add';
@@ -16,7 +15,7 @@ import { gerarPDF } from "../../shared/contexts/utils/gerarPDF";
 import { LayoutBaseDePagina } from '../../shared/layouts';
 import { useSnackbar } from '../../shared/contexts/SnackbarProvider';
 import { Environment } from '../../shared/environment';
-
+import { useMqtt } from '../../shared/contexts/MqttContext';
 
 export interface RowData {
     id: number;
@@ -329,13 +328,9 @@ export const PaginaInicial: React.FC = () => {
     const [produtores, setProdutores] = React.useState<IProdutor[]>([]);
     const { showSnackbar } = useSnackbar();
     const [busca] = React.useState('');
-    const mqttClientRef = React.useRef<MqttClient | null>(null);
-    // const [mqttStatus, setMqttStatus] = React.useState<'Conectado' | 'Desconectado'>('Desconectado');
+    const { adicionarNaFila, filaEspera } = useMqtt();
     const formStateRef = React.useRef(formState);
     const [filtroProdutor, setFiltroProdutor] = React.useState<IProdutor | null>(null);
-    const filaRef = React.useRef<{ id: number; nome: string }[]>([]);
-    const [filaEspera, setFilaEspera] = React.useState<{ id: number; nome: string }[]>([]);
-    const processandoRef = React.useRef(false);
     const [filtroDataInicio, setFiltroDataInicio] = React.useState('');
     const [filtroDataFim, setFiltroDataFim] = React.useState('');
     const [pageHistorico, setPageHistorico] = React.useState(0);
@@ -373,27 +368,6 @@ export const PaginaInicial: React.FC = () => {
         setFormState(prev => ({ ...prev, [field]: value }));
     }, []);
 
-    const processarFila = React.useCallback(() => {
-        if (!mqttClientRef.current) return;
-
-        if (processandoRef.current) return;
-        const proximo = filaRef.current[0];
-
-        if (!proximo) return;
-        processandoRef.current = true;
-        mqttClientRef.current.publish(
-            'sertao_serido/fila',
-            JSON.stringify({
-                comando: "AGUARDANDO_PESO",
-                nome: proximo.nome,
-                id: proximo.id
-            }),
-            { retain: true }
-        );
-
-        console.log("📤 Enviado para balança:", proximo.nome);
-    }, []);
-
     const handleSalvar = React.useCallback(async () => {
         if (!formState.nome || !formState.tanque || !formState.acidez) {
             showSnackbar("Nome, tanque e Acidez são obrigatórios!", "warning");
@@ -426,15 +400,12 @@ export const PaginaInicial: React.FC = () => {
             // 4️⃣ Se acidez < 20 adiciona na fila
             if (acidez < 20 && registroNovo) {
 
-                filaRef.current.push({
+                adicionarNaFila({
                     id: registroNovo.id,
                     nome: registroNovo.nome
                 });
-                setFilaEspera([...filaRef.current]);
 
-                console.log("📥 Adicionado na fila:", registroNovo.nome);
-
-                processarFila(); // tenta enviar se não estiver processando
+                console.log("📥 Adicionado na fila (Context):", registroNovo.nome);
 
             } else {
                 console.log("Coleta não enviada para balança. Acidez >= 20");
@@ -447,7 +418,7 @@ export const PaginaInicial: React.FC = () => {
             showSnackbar("Erro ao salvar.", "error");
             console.error(error);
         }
-    }, [formState, processarFila, showSnackbar]);
+    }, [formState, adicionarNaFila, showSnackbar]);
 
     const handleSalvarEdicao = React.useCallback(async () => {
         if (!editId) return;
@@ -471,75 +442,25 @@ export const PaginaInicial: React.FC = () => {
         }
     }, [editId, formEdicao, showSnackbar]);
     React.useEffect(() => {
-        if (filaEspera.length === 0 || mqttClientRef.current) {
-            return;
-        }
-
-        let isMounted = true;
-        let client: MqttClient | null = null;
-
-        const setupMqtt = async () => {
-            if (mqttClientRef.current) return;
-
-            const { default: mqtt } = await import('mqtt');
-            if (!isMounted) return;
-
-            client = mqtt.connect(`${Environment.MQTT_WS_URL}/mqtt`, {
-                reconnectPeriod: 5000,
-            });
-
-            mqttClientRef.current = client;
-
-            client.on('connect', () => {
-                console.log('✅ MQTT conectado');
-                client?.subscribe('sertao_serido/leite');
-            });
-
-            client.on("message", async (_topic, message) => {
-                const dados = JSON.parse(message.toString());
-                console.log("📥 Recebido da balança:", dados);
-
-                try {
-                    await Api.patch(`/coletas/${dados.id}/${dados.peso}`, {
-                        leite_bom_qnt: dados.peso
-                    });
-
-                    console.log("✅ Peso atualizado para ID", dados.id);
-                    filaRef.current.shift();
-                    setFilaEspera([...filaRef.current]);
-
-                    processandoRef.current = false;
-                    setTimeout(() => {
-                        processarFila();
-                    }, 2000);
-
-                    const res = await Api.get('/coletas');
-                    setRegistrosSalvos(
-                        res.data.sort((a: RowData, b: RowData) =>
-                            new Date(b.data).getTime() - new Date(a.data).getTime()
-                        )
-                    );
-
-                } catch (error: any) {
-                    console.log("Erro ao atualizar peso:", error.response?.data);
-                }
-            });
-
-            client.on('error', (err) => {
-                console.error("Erro MQTT:", err);
-            });
-        };
-
-        setupMqtt();
-
-        return () => {
-            isMounted = false;
-            client?.end(true);
-            if (mqttClientRef.current === client) {
-                mqttClientRef.current = null;
+        const handleMqttUpdate = async () => {
+            try {
+                const res = await Api.get('/coletas');
+                setRegistrosSalvos(
+                    res.data.sort((a: RowData, b: RowData) =>
+                        new Date(b.data).getTime() - new Date(a.data).getTime()
+                    )
+                );
+            } catch (error) {
+                console.error("Erro ao atualizar coletas:", error);
             }
         };
-    }, [filaEspera.length, processarFila]);
+
+        window.addEventListener('mqtt-peso-atualizado', handleMqttUpdate);
+
+        return () => {
+            window.removeEventListener('mqtt-peso-atualizado', handleMqttUpdate);
+        };
+    }, []);
 
 
     const handleEdit = React.useCallback((registro: RowData) => {

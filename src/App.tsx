@@ -1,5 +1,5 @@
 import { BrowserRouter } from "react-router-dom";
-import { AppThemeProvider, AuthProvider, DrawerProvider } from './shared/contexts';
+import { AppThemeProvider, AuthProvider, DrawerProvider, MqttProvider } from './shared/contexts';
 import { AppRoutes } from './routes';
 import { SnackbarProvider } from "./shared/contexts/SnackbarProvider";
 
@@ -9,9 +9,11 @@ export const App = () => {
       <AppThemeProvider>
         <SnackbarProvider>
           <DrawerProvider>
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
+            <MqttProvider>
+              <BrowserRouter>
+                <AppRoutes />
+              </BrowserRouter>
+            </MqttProvider>
           </DrawerProvider>
         </SnackbarProvider>
       </AppThemeProvider>

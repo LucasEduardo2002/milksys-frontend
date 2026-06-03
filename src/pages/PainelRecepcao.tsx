@@ -104,7 +104,13 @@ export const PainelRecepcao: React.FC = () => {
         };
         fetchColetas();
         const intervalId = setInterval(fetchColetas, 20000); // Auto-atualiza a cada 20 segundos
-        return () => clearInterval(intervalId);
+        
+        window.addEventListener('mqtt-peso-atualizado', fetchColetas);
+
+        return () => {
+            clearInterval(intervalId);
+            window.removeEventListener('mqtt-peso-atualizado', fetchColetas);
+        };
     }, [dataFiltro]);
 
     const totalLeiteDoDia = coletas.reduce((acc, curr) => acc + Number(curr.leite_bom_qnt || 0), 0);
