@@ -16,6 +16,8 @@ import { LayoutBaseDePagina } from '../../shared/layouts';
 import { useSnackbar } from '../../shared/contexts/SnackbarProvider';
 import { Environment } from '../../shared/environment';
 import { useMqtt } from '../../shared/contexts/MqttContext';
+import { EkomilkSerialService, parseEkomilkData } from '../../shared/services/ekomilk/EkomilkSerialService';
+import type { EkomilkData } from '../../shared/services/ekomilk/EkomilkSerialService';
 
 export interface RowData {
     id: number;
@@ -310,6 +312,192 @@ const EditarColetaDialog = React.memo(function EditarColetaDialog(props: {
     );
 });
 
+const EkomilkSelectColetaDialog = React.memo(function EkomilkSelectColetaDialog(props: {
+    open: boolean;
+    onClose: () => void;
+    coletas: RowData[];
+    onSelect: (coleta: RowData) => void;
+}) {
+    const { open, onClose, coletas, onSelect } = props;
+
+    const coletasOrdenadas = React.useMemo(() => {
+        return [...coletas].sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+    }, [coletas]);
+
+    if (!open) return null;
+
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+            <DialogTitle>Selecionar Coleta Pendente - Ekomilk M</DialogTitle>
+            <DialogContent dividers>
+                <Typography variant="body1" sx={{ mb: 2 }}>
+                    Selecione para qual das coletas pendentes registradas hoje deseja aplicar os dados do Ekomilk M:
+                </Typography>
+                <TableContainer component={Paper} variant="outlined">
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Produtor</TableCell>
+                                <TableCell>Tanque</TableCell>
+                                <TableCell align="center">Qtd Leite Bom</TableCell>
+                                <TableCell align="center">Ação</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {coletasOrdenadas.map((coleta) => (
+                                <TableRow key={coleta.id} hover>
+                                    <TableCell><strong>{coleta.nome}</strong></TableCell>
+                                    <TableCell>{coleta.tanque}</TableCell>
+                                    <TableCell align="center">{coleta.leite_bom_qnt}</TableCell>
+                                    <TableCell align="center">
+                                        <Button 
+                                            variant="contained" 
+                                            size="small" 
+                                            onClick={() => onSelect(coleta)}
+                                        >
+                                            Selecionar
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose}>Cancelar</Button>
+            </DialogActions>
+        </Dialog>
+    );
+});
+
+const EkomilkConfirmDialog = React.memo(function EkomilkConfirmDialog(props: {
+    open: boolean;
+    onClose: () => void;
+    coleta: RowData | null;
+    ekomilkData: EkomilkData | null;
+    onConfirm: (updatedFields: Partial<RowData>) => void;
+}) {
+    const { open, onClose, coleta, ekomilkData, onConfirm } = props;
+    const [fields, setFields] = React.useState<Partial<RowData>>({});
+
+    React.useEffect(() => {
+        if (ekomilkData) {
+            setFields({
+                gordura: ekomilkData.gordura,
+                ESD: ekomilkData.esd,
+                densidade: ekomilkData.densidade,
+                proteina: ekomilkData.proteina,
+                crioscopia: ekomilkData.crioscopia,
+                lactose: ekomilkData.lactose,
+                EST: ekomilkData.est,
+            });
+        }
+    }, [ekomilkData, open]);
+
+    if (!open || !coleta || !ekomilkData) return null;
+
+    const handleChange = (field: keyof RowData, value: string) => {
+        setFields(prev => ({ ...prev, [field]: value }));
+    };
+
+    return (
+        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+            <DialogTitle>Confirmar Importação de Análise - Ekomilk M</DialogTitle>
+            <DialogContent dividers>
+                <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                    Verifique os dados da análise recebidos do Ekomilk para a coleta do produtor <strong>{coleta.nome}</strong> (Tanque: <strong>{coleta.tanque}</strong>) antes de salvar:
+                </Typography>
+                
+                <Grid container spacing={2} sx={{ mt: 1 }}>
+                    <Grid item xs={12} sm={6}>
+                        <TextField label="Produtor" value={coleta.nome} disabled fullWidth size="small" />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField label="Tanque" value={coleta.tanque} disabled fullWidth size="small" />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField label="Data" value={new Date(coleta.data).toLocaleDateString()} disabled fullWidth size="small" />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <TextField label="Acidez" value={coleta.acidez} disabled fullWidth size="small" />
+                    </Grid>
+                    
+                    <Grid item xs={12}><Typography variant="subtitle2" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>Dados da Análise Ekomilk (Editáveis)</Typography></Grid>
+                    
+                    <Grid item xs={6} sm={4} md={3}>
+                        <TextField 
+                            label="Gordura" 
+                            value={fields.gordura || ''} 
+                            onChange={(e) => handleChange('gordura', e.target.value)} 
+                            fullWidth 
+                            size="small" 
+                        />
+                    </Grid>
+                    <Grid item xs={6} sm={4} md={3}>
+                        <TextField 
+                            label="ESD" 
+                            value={fields.ESD || ''} 
+                            onChange={(e) => handleChange('ESD', e.target.value)} 
+                            fullWidth 
+                            size="small" 
+                        />
+                    </Grid>
+                    <Grid item xs={6} sm={4} md={3}>
+                        <TextField 
+                            label="Densidade" 
+                            value={fields.densidade || ''} 
+                            onChange={(e) => handleChange('densidade', e.target.value)} 
+                            fullWidth 
+                            size="small" 
+                        />
+                    </Grid>
+                    <Grid item xs={6} sm={4} md={3}>
+                        <TextField 
+                            label="EST" 
+                            value={fields.EST || ''} 
+                            onChange={(e) => handleChange('EST', e.target.value)} 
+                            fullWidth 
+                            size="small" 
+                        />
+                    </Grid>
+                    <Grid item xs={6} sm={4} md={3}>
+                        <TextField 
+                            label="Proteína" 
+                            value={fields.proteina || ''} 
+                            onChange={(e) => handleChange('proteina', e.target.value)} 
+                            fullWidth 
+                            size="small" 
+                        />
+                    </Grid>
+                    <Grid item xs={6} sm={4} md={3}>
+                        <TextField 
+                            label="Crioscopia" 
+                            value={fields.crioscopia || ''} 
+                            onChange={(e) => handleChange('crioscopia', e.target.value)} 
+                            fullWidth 
+                            size="small" 
+                        />
+                    </Grid>
+                    <Grid item xs={6} sm={4} md={3}>
+                        <TextField 
+                            label="Lactose" 
+                            value={fields.lactose || ''} 
+                            onChange={(e) => handleChange('lactose', e.target.value)} 
+                            fullWidth 
+                            size="small" 
+                        />
+                    </Grid>
+                </Grid>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose}>Cancelar</Button>
+                <Button variant="contained" onClick={() => onConfirm(fields)}>Confirmar e Salvar</Button>
+            </DialogActions>
+        </Dialog>
+    );
+});
+
 const createEmptyRow = (): Omit<RowData, 'id'> => ({
     nome: '', tanque: '', data: new Date().toLocaleDateString('sv-SE'), acidez: '', leite_bom_qnt: 0,
     densidade: '', gordura: '', ESD: '', EST: '', proteina: '', crioscopia: '', lactose: '',
@@ -337,6 +525,16 @@ export const PaginaInicial: React.FC = () => {
     const rowsPerPageHistorico = 10;
     const analistas = ['Janaina', 'Alderalicy', 'Rejanilza'];
     const alizarol = ['Normal', 'Coagulou'];
+
+    // Ekomilk states
+    const [serialStatus, setSerialStatus] = React.useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
+    const [openEkomilkConfirmModal, setOpenEkomilkConfirmModal] = React.useState(false);
+    const [openEkomilkSelectColetaModal, setOpenEkomilkSelectColetaModal] = React.useState(false);
+    const [selectedColetaForEkomilk, setSelectedColetaForEkomilk] = React.useState<RowData | null>(null);
+    const [pendingEkomilkData, setPendingEkomilkData] = React.useState<EkomilkData | null>(null);
+    const [multipleColetasList, setMultipleColetasList] = React.useState<RowData[]>([]);
+    const [baudRate, setBaudRate] = React.useState<number>(9600);
+    const serialServiceRef = React.useRef<EkomilkSerialService | null>(null);
 
     const produtoresOrdenados = React.useMemo(
         () => [...produtores].sort((a, b) => a.nome.localeCompare(b.nome)),
@@ -367,6 +565,129 @@ export const PaginaInicial: React.FC = () => {
     const handleChange = React.useCallback((field: keyof Omit<RowData, 'id'>, value: string) => {
         setFormState(prev => ({ ...prev, [field]: value }));
     }, []);
+
+    // Sync ref with registrosSalvos
+    React.useEffect(() => {
+        registrosSalvosRef.current = registrosSalvos;
+    }, [registrosSalvos]);
+
+    const handleEkomilkData = React.useCallback((data: EkomilkData) => {
+        const hoje = new Date().toLocaleDateString('sv-SE');
+        
+        // Filter today's coletas that are pending analysis data (gordura or ESD equal to '-' or empty)
+        const matching = registrosSalvosRef.current.filter(r => 
+            new Date(r.data).toLocaleDateString('sv-SE') === hoje &&
+            (r.gordura === '-' || r.gordura === '' || r.ESD === '-' || r.ESD === '')
+        );
+
+        setPendingEkomilkData(data);
+
+        if (matching.length >= 1) {
+            setMultipleColetasList(matching);
+            setOpenEkomilkSelectColetaModal(true);
+        } else {
+            // Fill main form state, leaving producer name, tank, and acidity empty
+            setFormState(prev => ({
+                ...prev,
+                nome: '',
+                tanque: '',
+                acidez: '',
+                data: hoje,
+                gordura: data.gordura,
+                ESD: data.esd,
+                densidade: data.densidade,
+                proteina: data.proteina,
+                crioscopia: data.crioscopia,
+                lactose: data.lactose,
+                EST: data.est,
+            }));
+            setMostrarOpcionais(true);
+            showSnackbar("Dados analíticos do Ekomilk importados no formulário de cadastro. Selecione o produtor e preencha os dados restantes.", "info");
+        }
+    }, [showSnackbar]);
+
+    const handleEkomilkDataRef = React.useRef(handleEkomilkData);
+    React.useEffect(() => {
+        handleEkomilkDataRef.current = handleEkomilkData;
+    }, [handleEkomilkData]);
+
+    React.useEffect(() => {
+        (window as any).__simulateEkomilkRaw = (text: string) => {
+            const parsed = parseEkomilkData(text);
+            if (parsed) {
+                handleEkomilkData(parsed as EkomilkData);
+            } else {
+                console.error("Simulação falhou: formato inválido", text);
+            }
+        };
+        return () => {
+            delete (window as any).__simulateEkomilkRaw;
+        };
+    }, [handleEkomilkData]);
+
+    const handleToggleSerial = React.useCallback(async () => {
+        if (serialStatus === 'connected') {
+            if (serialServiceRef.current) {
+                await serialServiceRef.current.disconnect();
+            }
+        } else {
+            try {
+                const service = new EkomilkSerialService(
+                    (data) => {
+                        handleEkomilkDataRef.current(data);
+                    },
+                    (status) => {
+                        setSerialStatus(status);
+                    }
+                );
+                serialServiceRef.current = service;
+                await service.connect(baudRate);
+            } catch (error) {
+                showSnackbar("Não foi possível conectar ao Ekomilk M.", "error");
+            }
+        }
+    }, [serialStatus, baudRate, showSnackbar]);
+
+    React.useEffect(() => {
+        return () => {
+            if (serialServiceRef.current) {
+                serialServiceRef.current.disconnect();
+            }
+        };
+    }, []);
+
+    const handleSelectColetaForEkomilk = React.useCallback((coleta: RowData) => {
+        setSelectedColetaForEkomilk(coleta);
+        setOpenEkomilkSelectColetaModal(false);
+        setOpenEkomilkConfirmModal(true);
+    }, []);
+
+    const handleConfirmEkomilkData = React.useCallback(async (updatedFields: Partial<RowData>) => {
+        if (!selectedColetaForEkomilk) return;
+        try {
+            const merged = {
+                ...selectedColetaForEkomilk,
+                ...updatedFields,
+                data: selectedColetaForEkomilk.data ? new Date(selectedColetaForEkomilk.data).toISOString().split('T')[0] : '',
+            };
+            
+            await Api.put(`/coletas/${selectedColetaForEkomilk.id}`, merged);
+            showSnackbar("Medições do Ekomilk aplicadas com sucesso!", "success");
+            
+            const res = await Api.get('/coletas');
+            const registrosOrdenados = res.data.sort(
+                (a: RowData, b: RowData) => new Date(b.data).getTime() - new Date(a.data).getTime()
+            );
+            setRegistrosSalvos(registrosOrdenados);
+            
+            setOpenEkomilkConfirmModal(false);
+            setSelectedColetaForEkomilk(null);
+            setPendingEkomilkData(null);
+        } catch (error) {
+            showSnackbar("Erro ao aplicar as medições.", "error");
+            console.error(error);
+        }
+    }, [selectedColetaForEkomilk, showSnackbar]);
 
     const handleSalvar = React.useCallback(async () => {
         if (!formState.nome || !formState.tanque || !formState.acidez) {
@@ -556,6 +877,63 @@ export const PaginaInicial: React.FC = () => {
     }, [showSnackbar]);
     return (
         <LayoutBaseDePagina titulo="Controle de Qualidade" subtitulo="Registro de análises do leite">
+            <Paper 
+                variant="outlined" 
+                sx={{ 
+                    p: 2, 
+                    mb: 3, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    gap: 2, 
+                    flexWrap: 'wrap', 
+                    borderLeft: '6px solid', 
+                    borderColor: serialStatus === 'connected' ? 'success.main' : serialStatus === 'connecting' ? 'warning.main' : 'error.main' 
+                }}
+            >
+                <Box display="flex" alignItems="center" gap={2}>
+                    <Box 
+                        sx={{
+                            width: 12,
+                            height: 12,
+                            borderRadius: '50%',
+                            bgcolor: serialStatus === 'connected' ? 'success.main' : serialStatus === 'connecting' ? 'warning.main' : 'error.main',
+                            boxShadow: serialStatus === 'connected' ? '0 0 8px #4caf50' : 'none',
+                        }}
+                    />
+                    <Typography variant="subtitle1" fontWeight="bold">
+                        Status Ekomilk M: {
+                            serialStatus === 'connected' ? 'Conectado' : 
+                            serialStatus === 'connecting' ? 'Conectando...' : 
+                            serialStatus === 'error' ? 'Erro na Conexão' : 'Desconectado'
+                        }
+                    </Typography>
+                </Box>
+                <Box display="flex" alignItems="center" gap={2}>
+                    {serialStatus === 'disconnected' && (
+                        <TextField
+                            select
+                            label="Baud Rate"
+                            value={baudRate}
+                            onChange={(e) => setBaudRate(Number(e.target.value))}
+                            size="small"
+                            SelectProps={{ native: true }}
+                            sx={{ width: 120 }}
+                        >
+                            <option value={9600}>9600</option>
+                            <option value={115200}>115200</option>
+                        </TextField>
+                    )}
+                    <Button 
+                        variant="contained" 
+                        color={serialStatus === 'connected' ? 'error' : 'primary'}
+                        onClick={handleToggleSerial}
+                    >
+                        {serialStatus === 'connected' ? 'Desconectar Ekomilk M' : 'Conectar Ekomilk M'}
+                    </Button>
+                </Box>
+            </Paper>
+
             <FormCadastro
                 formState={formState}
                 mostrarOpcionais={mostrarOpcionais}
@@ -631,6 +1009,25 @@ export const PaginaInicial: React.FC = () => {
                 formEdicao={formEdicao}
                 onChange={handleChangeEdicao}
                 onSave={handleSalvarEdicao}
+            />
+
+            <EkomilkSelectColetaDialog
+                open={openEkomilkSelectColetaModal}
+                onClose={() => setOpenEkomilkSelectColetaModal(false)}
+                coletas={multipleColetasList}
+                onSelect={handleSelectColetaForEkomilk}
+            />
+
+            <EkomilkConfirmDialog
+                open={openEkomilkConfirmModal}
+                onClose={() => {
+                    setOpenEkomilkConfirmModal(false);
+                    setSelectedColetaForEkomilk(null);
+                    setPendingEkomilkData(null);
+                }}
+                coleta={selectedColetaForEkomilk}
+                ekomilkData={pendingEkomilkData}
+                onConfirm={handleConfirmEkomilkData}
             />
         </LayoutBaseDePagina>
     );
