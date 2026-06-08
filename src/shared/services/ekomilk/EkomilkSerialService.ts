@@ -153,6 +153,14 @@ export class EkomilkSerialService {
             this.port = await (navigator as any).serial.requestPort();
             await this.port.open({ baudRate });
             
+            try {
+                if (this.port.setSignals) {
+                    await this.port.setSignals({ dataTerminalReady: true, requestToSend: true });
+                }
+            } catch (sigError) {
+                console.warn('Não foi possível definir sinais DTR/RTS:', sigError);
+            }
+            
             this.onStatusChange('connected');
             this.keepReading = true;
             this.readLoop();
