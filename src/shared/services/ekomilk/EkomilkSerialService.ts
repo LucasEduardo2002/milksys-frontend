@@ -181,6 +181,8 @@ export class EkomilkSerialService {
                 }
             } catch (error) {
                 console.error('Erro de leitura na porta serial:', error);
+                // Aguarda 1 segundo antes de tentar ler novamente para evitar sobrecarga de CPU/Console em caso de erro persistente
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 break;
             } finally {
                 if (this.reader) {
