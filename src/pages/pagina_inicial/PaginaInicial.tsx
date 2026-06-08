@@ -533,7 +533,7 @@ export const PaginaInicial: React.FC = () => {
     const [selectedColetaForEkomilk, setSelectedColetaForEkomilk] = React.useState<RowData | null>(null);
     const [pendingEkomilkData, setPendingEkomilkData] = React.useState<EkomilkData | null>(null);
     const [multipleColetasList, setMultipleColetasList] = React.useState<RowData[]>([]);
-    const [baudRate, setBaudRate] = React.useState<number>(9600);
+    const [baudRate, setBaudRate] = React.useState<number>(2400);
     const serialServiceRef = React.useRef<EkomilkSerialService | null>(null);
 
     const produtoresOrdenados = React.useMemo(

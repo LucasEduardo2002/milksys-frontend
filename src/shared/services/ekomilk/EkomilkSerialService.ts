@@ -153,9 +153,9 @@ export class EkomilkSerialService {
             this.port = await (navigator as any).serial.requestPort();
             await this.port.open({ 
                 baudRate,
-                dataBits: 8,
+                dataBits: 7,
                 stopBits: 1,
-                parity: 'none',
+                parity: 'even',
                 flowControl: 'none'
             });
             
