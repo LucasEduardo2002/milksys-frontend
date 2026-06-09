@@ -534,7 +534,7 @@ export const PaginaInicial: React.FC = () => {
     const [pendingEkomilkData, setPendingEkomilkData] = React.useState<EkomilkData | null>(null);
     const [multipleColetasList, setMultipleColetasList] = React.useState<RowData[]>([]);
     const [baudRate, setBaudRate] = React.useState<number>(2400);
-    const [serialProfile, setSerialProfile] = React.useState<'8N1' | '7E1'>('8N1');
+    const [serialProfile, setSerialProfile] = React.useState<'8N1' | '7E1' | '8E1'>('8N1');
     const serialServiceRef = React.useRef<EkomilkSerialService | null>(null);
 
     const produtoresOrdenados = React.useMemo(
@@ -935,13 +935,14 @@ export const PaginaInicial: React.FC = () => {
                                 select
                                 label="Protocolo (Framing)"
                                 value={serialProfile}
-                                onChange={(e) => setSerialProfile(e.target.value as '8N1' | '7E1')}
+                                onChange={(e) => setSerialProfile(e.target.value as '8N1' | '7E1' | '8E1')}
                                 size="small"
                                 SelectProps={{ native: true }}
                                 sx={{ width: 170 }}
                             >
                                 <option value="8N1">8N1 (USB Moderno)</option>
                                 <option value="7E1">7E1 (RS-232 Legado)</option>
+                                <option value="8E1">8E1 (Ekomilk Original)</option>
                             </TextField>
                         </>
                     )}

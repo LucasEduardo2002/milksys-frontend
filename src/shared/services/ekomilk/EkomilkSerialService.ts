@@ -152,14 +152,14 @@ export class EkomilkSerialService {
         this.receiver = new EkomilkSerialReceiver(this.onData);
     }
 
-    public async connect(baudRate: number = 2400, profile: '8N1' | '7E1' = '8N1'): Promise<void> {
+    public async connect(baudRate: number = 2400, profile: '8N1' | '7E1' | '8E1' = '8N1'): Promise<void> {
         if (!('serial' in navigator)) {
             this.onStatusChange('error');
             throw new Error('Web Serial API não é suportada neste navegador.');
         }
 
-        const dataBits = profile === '8N1' ? 8 : 7;
-        const parity = profile === '8N1' ? 'none' : 'even';
+        const dataBits = profile === '7E1' ? 7 : 8;
+        const parity = (profile === '7E1' || profile === '8E1') ? 'even' : 'none';
 
         try {
             this.onStatusChange('connecting');
@@ -174,7 +174,9 @@ export class EkomilkSerialService {
 
             try {
                 if (this.port.setSignals) {
-                    await this.port.setSignals({ dataTerminalReady: true, requestToSend: true });
+                    // Para perfis com paridade Even (7E1, 8E1), desabilitamos DTR/RTS para alinhar com o software original (DtrEnable/RtsEnable = False)
+                    const dtrRts = (profile === '8N1') ? true : false;
+                    await this.port.setSignals({ dataTerminalReady: dtrRts, requestToSend: dtrRts });
                 }
             } catch (sigError) {
                 console.warn('Não foi possível definir sinais DTR/RTS:', sigError);
