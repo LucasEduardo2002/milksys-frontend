@@ -70,68 +70,127 @@ export function parseEkomilkData(text: string): Partial<EkomilkData> | null {
 }
 
 export class EkomilkSerialReceiver {
-    private buffer: string = '';
+    private byteBuffer: number[] = [];
+    private idleTimeout: any = null;
     private onDataParsed: (data: EkomilkData) => void;
 
     constructor(onDataParsed: (data: EkomilkData) => void) {
         this.onDataParsed = onDataParsed;
     }
 
-    public append(chunk: string) {
-        this.buffer += chunk;
-        this.processBuffer();
+    public append(chunk: Uint8Array) {
+        // Acumula os bytes recebidos
+        for (let i = 0; i < chunk.length; i++) {
+            this.byteBuffer.push(chunk[i]);
+        }
+
+        // Aguarda um pequeno intervalo (150ms) de inatividade para garantir que o pacote foi totalmente recebido
+        if (this.idleTimeout) {
+            clearTimeout(this.idleTimeout);
+        }
+
+        this.idleTimeout = setTimeout(() => {
+            this.processBuffer();
+        }, 150);
     }
 
     private processBuffer() {
-        let startIndex = -1;
-        const keywords = ['VENDOR', 'NUMBER', 'DATE:', 'FAT:', 'F: '];
-        const upperBuf = this.buffer.toUpperCase();
-        for (const kw of keywords) {
-            const idx = upperBuf.indexOf(kw);
-            if (idx !== -1 && (startIndex === -1 || idx < startIndex)) {
-                startIndex = idx;
+        if (this.byteBuffer.length === 0) return;
+
+        const len = this.byteBuffer.length;
+        const firstByte = this.byteBuffer[0];
+
+        // Verifica se parece um bilhete de texto (caractere imprimível ASCII, ex: VENDOR, NUMBER, DATE, FAT)
+        // Os caracteres ASCII imprimíveis comuns para início de bilhete estão entre 32 e 126.
+        const isText = (firstByte >= 32 && firstByte <= 126) && 
+                       (firstByte === 86 || firstByte === 78 || firstByte === 68 || firstByte === 70 || firstByte === 83); // V, N, D, F, S
+
+        if (isText || len > 40) {
+            // Processa como Texto (Bilhete ASCII de Impressora)
+            const textDecoder = new TextDecoder();
+            const text = textDecoder.decode(new Uint8Array(this.byteBuffer));
+            const parsed = parseEkomilkData(text);
+            if (parsed) {
+                this.onDataParsed(parsed as EkomilkData);
             }
-        }
+        } else if (len === 12 || len === 18 || len === 20) {
+            // Processa como Binário (Modo PC)
+            try {
+                const readFloat = (b0: number, b1: number): string => {
+                    // O formato binário da Ekomilk codifica o float em representação BCD hexadecimal,
+                    // ex: 0x03 e 0x50 viram "3" e "50", resultando em 3.50.
+                    const integerPart = parseInt(b0.toString(16), 10);
+                    const decimalPart = parseInt(b1.toString(16), 10) / 100;
+                    const val = integerPart + decimalPart;
+                    return isNaN(val) ? '' : val.toFixed(2);
+                };
 
-        if (startIndex === -1) {
-            if (this.buffer.length > 300) {
-                this.buffer = this.buffer.slice(-20);
-            }
-            return;
-        }
+                const fat = readFloat(this.byteBuffer[0], this.byteBuffer[1]);
+                const snf = readFloat(this.byteBuffer[2], this.byteBuffer[3]);
+                const denRaw = readFloat(this.byteBuffer[4], this.byteBuffer[5]);
+                const fpRaw = readFloat(this.byteBuffer[8], this.byteBuffer[9]);
+                const prot = readFloat(this.byteBuffer[10], this.byteBuffer[11]);
+                let lac = '';
 
-        if (startIndex > 0) {
-            this.buffer = this.buffer.slice(startIndex);
-        }
-
-        const hasEnd = /LAC:\s*[\d.,]+/i.test(this.buffer) || /L:\s*[\d.,]+/i.test(this.buffer);
-        if (hasEnd) {
-            const lines = this.buffer.split(/\r?\n/);
-            let endIndex = -1;
-            for (let i = 0; i < lines.length; i++) {
-                if (/(?:LAC|L):\s*[\d.,]+/i.test(lines[i])) {
-                    endIndex = i;
-                    break;
+                if (len === 20) {
+                    lac = readFloat(this.byteBuffer[18], this.byteBuffer[19]);
                 }
-            }
 
-            if (endIndex !== -1) {
-                const reportLines = lines.slice(0, endIndex + 1);
-                const reportText = reportLines.join('\n');
-
-                const parsed = parseEkomilkData(reportText);
-                if (parsed && parsed.vendorId !== undefined) {
-                    this.onDataParsed(parsed as EkomilkData);
+                // Conversão de Densidade (ex: 27.68 -> 1027.7)
+                let densidade = '';
+                if (denRaw) {
+                    const denNum = parseFloat(denRaw);
+                    if (!isNaN(denNum)) {
+                        densidade = (1000 + denNum).toFixed(1);
+                    }
                 }
 
-                const remainingLines = lines.slice(endIndex + 1);
-                this.buffer = remainingLines.join('\n');
+                // Conversão de Crioscopia (ex: 53.00 -> -0.530)
+                let crioscopia = '';
+                if (fpRaw) {
+                    const fpNum = parseFloat(fpRaw);
+                    if (!isNaN(fpNum)) {
+                        crioscopia = (-fpNum / 100).toFixed(3);
+                    }
+                }
+
+                // Cálculo de EST
+                let est = '';
+                if (fat && snf) {
+                    const fatNum = parseFloat(fat);
+                    const snfNum = parseFloat(snf);
+                    if (!isNaN(fatNum) && !isNaN(snfNum)) {
+                        est = (fatNum + snfNum).toFixed(2);
+                    }
+                }
+
+                this.onDataParsed({
+                    vendorId: 1,
+                    gordura: fat,
+                    esd: snf,
+                    densidade,
+                    crioscopia,
+                    proteina: prot,
+                    lactose: lac,
+                    est
+                });
+            } catch (err) {
+                console.error('Erro ao processar pacote binário da Ekomilk:', err);
             }
+        } else {
+            console.warn(`Tamanho de pacote serial Ekomilk não reconhecido: ${len} bytes.`);
         }
+
+        // Limpa o buffer após o processamento
+        this.clear();
     }
 
     public clear() {
-        this.buffer = '';
+        this.byteBuffer = [];
+        if (this.idleTimeout) {
+            clearTimeout(this.idleTimeout);
+            this.idleTimeout = null;
+        }
     }
 }
 
@@ -194,7 +253,6 @@ export class EkomilkSerialService {
     }
 
     private async readLoop(): Promise<void> {
-        const textDecoder = new TextDecoder();
         while (this.port && this.port.readable && this.keepReading) {
             try {
                 this.reader = this.port.readable.getReader();
@@ -204,8 +262,7 @@ export class EkomilkSerialService {
                         break;
                     }
                     if (value) {
-                        const chunk = textDecoder.decode(value);
-                        this.receiver.append(chunk);
+                        this.receiver.append(value);
                     }
                 }
             } catch (error) {
