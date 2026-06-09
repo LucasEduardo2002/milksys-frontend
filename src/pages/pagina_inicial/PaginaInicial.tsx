@@ -534,6 +534,7 @@ export const PaginaInicial: React.FC = () => {
     const [pendingEkomilkData, setPendingEkomilkData] = React.useState<EkomilkData | null>(null);
     const [multipleColetasList, setMultipleColetasList] = React.useState<RowData[]>([]);
     const [baudRate, setBaudRate] = React.useState<number>(2400);
+    const [serialProfile, setSerialProfile] = React.useState<'8N1' | '7E1'>('8N1');
     const serialServiceRef = React.useRef<EkomilkSerialService | null>(null);
 
     const produtoresOrdenados = React.useMemo(
@@ -641,12 +642,12 @@ export const PaginaInicial: React.FC = () => {
                     }
                 );
                 serialServiceRef.current = service;
-                await service.connect(baudRate);
+                await service.connect(baudRate, serialProfile);
             } catch (error) {
                 showSnackbar("Não foi possível conectar ao Ekomilk M.", "error");
             }
         }
-    }, [serialStatus, baudRate, showSnackbar]);
+    }, [serialStatus, baudRate, serialProfile, showSnackbar]);
 
     React.useEffect(() => {
         return () => {
@@ -911,24 +912,38 @@ export const PaginaInicial: React.FC = () => {
                 </Box>
                 <Box display="flex" alignItems="center" gap={2}>
                     {serialStatus === 'disconnected' && (
-                        <TextField
-                            select
-                            label="Baud Rate"
-                            value={baudRate}
-                            onChange={(e) => setBaudRate(Number(e.target.value))}
-                            size="small"
-                            SelectProps={{ native: true }}
-                            sx={{ width: 120 }}
-                        >
-                            <option value={1200}>1200</option>
-                            <option value={2400}>2400</option>
-                            <option value={4800}>4800</option>
-                            <option value={9600}>9600</option>
-                            <option value={19200}>19200</option>
-                            <option value={38400}>38400</option>
-                            <option value={57600}>57600</option>
-                            <option value={115200}>115200</option>
-                        </TextField>
+                        <>
+                            <TextField
+                                select
+                                label="Baud Rate"
+                                value={baudRate}
+                                onChange={(e) => setBaudRate(Number(e.target.value))}
+                                size="small"
+                                SelectProps={{ native: true }}
+                                sx={{ width: 120 }}
+                            >
+                                <option value={1200}>1200</option>
+                                <option value={2400}>2400</option>
+                                <option value={4800}>4800</option>
+                                <option value={9600}>9600</option>
+                                <option value={19200}>19200</option>
+                                <option value={38400}>38400</option>
+                                <option value={57600}>57600</option>
+                                <option value={115200}>115200</option>
+                            </TextField>
+                            <TextField
+                                select
+                                label="Protocolo (Framing)"
+                                value={serialProfile}
+                                onChange={(e) => setSerialProfile(e.target.value as '8N1' | '7E1')}
+                                size="small"
+                                SelectProps={{ native: true }}
+                                sx={{ width: 170 }}
+                            >
+                                <option value="8N1">8N1 (USB Moderno)</option>
+                                <option value="7E1">7E1 (RS-232 Legado)</option>
+                            </TextField>
+                        </>
                     )}
                     <Button 
                         variant="contained" 

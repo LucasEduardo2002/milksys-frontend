@@ -10,17 +10,18 @@ export interface EkomilkData {
 }
 
 export function parseEkomilkData(text: string): Partial<EkomilkData> | null {
-    const vendorMatch = text.match(/VENDOR\s+(\d+)/i);
-    const fatMatch = text.match(/FAT:\s*([\d.,]+)/i);
-    const snfMatch = text.match(/SNF:\s*([\d.,]+)/i);
-    const denMatch = text.match(/DEN:\s*([\d.,]+)/i);
+    const vendorMatch = text.match(/(?:VENDOR|NUMBER)\s*[:]?\s*(\d+)/i);
+    const fatMatch = text.match(/(?:FAT|F):\s*([\d.,]+)/i);
+    const snfMatch = text.match(/(?:SNF|S):\s*([\d.,]+)/i);
+    const denMatch = text.match(/(?:DEN|D):\s*([\d.,]+)/i);
     const fpMatch = text.match(/FP:\s*([\d.,]+)/i);
-    const protMatch = text.match(/PROT:\s*([\d.,]+)/i);
+    const protMatch = text.match(/(?:PROT|P):\s*([\d.,]+)/i);
     const lacMatch = text.match(/(?:LAC|L):\s*([\d.,]+)/i);
 
-    if (!vendorMatch) return null;
+    // Verifica se conseguimos ler as métricas principais para assegurar que é um ticket Ekomilk válido
+    if (!fatMatch && !snfMatch && !denMatch) return null;
 
-    const vendorId = parseInt(vendorMatch[1], 10);
+    const vendorId = vendorMatch ? parseInt(vendorMatch[1], 10) : 1;
     const gordura = fatMatch ? fatMatch[1].replace(',', '.') : '';
     const esd = snfMatch ? snfMatch[1].replace(',', '.') : '';
     const denRaw = denMatch ? denMatch[1].replace(',', '.') : '';
@@ -82,16 +83,25 @@ export class EkomilkSerialReceiver {
     }
 
     private processBuffer() {
-        const vendorIndex = this.buffer.toUpperCase().indexOf('VENDOR');
-        if (vendorIndex === -1) {
-            if (this.buffer.length > 200) {
+        let startIndex = -1;
+        const keywords = ['VENDOR', 'NUMBER', 'DATE:', 'FAT:', 'F: '];
+        const upperBuf = this.buffer.toUpperCase();
+        for (const kw of keywords) {
+            const idx = upperBuf.indexOf(kw);
+            if (idx !== -1 && (startIndex === -1 || idx < startIndex)) {
+                startIndex = idx;
+            }
+        }
+
+        if (startIndex === -1) {
+            if (this.buffer.length > 300) {
                 this.buffer = this.buffer.slice(-20);
             }
             return;
         }
 
-        if (vendorIndex > 0) {
-            this.buffer = this.buffer.slice(vendorIndex);
+        if (startIndex > 0) {
+            this.buffer = this.buffer.slice(startIndex);
         }
 
         const hasEnd = /LAC:\s*[\d.,]+/i.test(this.buffer) || /L:\s*[\d.,]+/i.test(this.buffer);
@@ -108,7 +118,7 @@ export class EkomilkSerialReceiver {
             if (endIndex !== -1) {
                 const reportLines = lines.slice(0, endIndex + 1);
                 const reportText = reportLines.join('\n');
-                
+
                 const parsed = parseEkomilkData(reportText);
                 if (parsed && parsed.vendorId !== undefined) {
                     this.onDataParsed(parsed as EkomilkData);
@@ -119,7 +129,7 @@ export class EkomilkSerialReceiver {
             }
         }
     }
-    
+
     public clear() {
         this.buffer = '';
     }
@@ -142,23 +152,26 @@ export class EkomilkSerialService {
         this.receiver = new EkomilkSerialReceiver(this.onData);
     }
 
-    public async connect(baudRate: number = 9600): Promise<void> {
+    public async connect(baudRate: number = 2400, profile: '8N1' | '7E1' = '8N1'): Promise<void> {
         if (!('serial' in navigator)) {
             this.onStatusChange('error');
             throw new Error('Web Serial API não é suportada neste navegador.');
         }
+
+        const dataBits = profile === '8N1' ? 8 : 7;
+        const parity = profile === '8N1' ? 'none' : 'even';
 
         try {
             this.onStatusChange('connecting');
             this.port = await (navigator as any).serial.requestPort();
             await this.port.open({ 
                 baudRate,
-                dataBits: 7,
+                dataBits,
                 stopBits: 1,
-                parity: 'even',
+                parity,
                 flowControl: 'none'
             });
-            
+
             try {
                 if (this.port.setSignals) {
                     await this.port.setSignals({ dataTerminalReady: true, requestToSend: true });
@@ -166,7 +179,7 @@ export class EkomilkSerialService {
             } catch (sigError) {
                 console.warn('Não foi possível definir sinais DTR/RTS:', sigError);
             }
-            
+
             this.onStatusChange('connected');
             this.keepReading = true;
             this.readLoop();
@@ -209,7 +222,7 @@ export class EkomilkSerialService {
                 }
             }
         }
-        
+
         if (this.keepReading) {
             this.disconnect();
         }
@@ -217,7 +230,7 @@ export class EkomilkSerialService {
 
     public async disconnect(): Promise<void> {
         this.keepReading = false;
-        
+
         if (this.reader) {
             try {
                 await this.reader.cancel();
