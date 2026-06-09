@@ -533,8 +533,8 @@ export const PaginaInicial: React.FC = () => {
     const [selectedColetaForEkomilk, setSelectedColetaForEkomilk] = React.useState<RowData | null>(null);
     const [pendingEkomilkData, setPendingEkomilkData] = React.useState<EkomilkData | null>(null);
     const [multipleColetasList, setMultipleColetasList] = React.useState<RowData[]>([]);
-    const [baudRate, setBaudRate] = React.useState<number>(2400);
-    const [serialProfile, setSerialProfile] = React.useState<'8N1' | '7E1' | '8E1'>('8N1');
+    const [baudRate] = React.useState<number>(1200);
+    const [serialProfile] = React.useState<'8N1' | '7E1' | '8E1'>('8E1');
     const serialServiceRef = React.useRef<EkomilkSerialService | null>(null);
 
     const produtoresOrdenados = React.useMemo(
@@ -911,41 +911,6 @@ export const PaginaInicial: React.FC = () => {
                     </Typography>
                 </Box>
                 <Box display="flex" alignItems="center" gap={2}>
-                    {serialStatus === 'disconnected' && (
-                        <>
-                            <TextField
-                                select
-                                label="Baud Rate"
-                                value={baudRate}
-                                onChange={(e) => setBaudRate(Number(e.target.value))}
-                                size="small"
-                                SelectProps={{ native: true }}
-                                sx={{ width: 120 }}
-                            >
-                                <option value={1200}>1200</option>
-                                <option value={2400}>2400</option>
-                                <option value={4800}>4800</option>
-                                <option value={9600}>9600</option>
-                                <option value={19200}>19200</option>
-                                <option value={38400}>38400</option>
-                                <option value={57600}>57600</option>
-                                <option value={115200}>115200</option>
-                            </TextField>
-                            <TextField
-                                select
-                                label="Protocolo (Framing)"
-                                value={serialProfile}
-                                onChange={(e) => setSerialProfile(e.target.value as '8N1' | '7E1' | '8E1')}
-                                size="small"
-                                SelectProps={{ native: true }}
-                                sx={{ width: 170 }}
-                            >
-                                <option value="8N1">8N1 (USB Moderno)</option>
-                                <option value="7E1">7E1 (RS-232 Legado)</option>
-                                <option value="8E1">8E1 (Ekomilk Original)</option>
-                            </TextField>
-                        </>
-                    )}
                     <Button 
                         variant="contained" 
                         color={serialStatus === 'connected' ? 'error' : 'primary'}

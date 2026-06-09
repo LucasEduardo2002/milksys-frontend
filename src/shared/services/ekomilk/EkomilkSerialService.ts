@@ -38,12 +38,14 @@ export function parseEkomilkData(text: string): Partial<EkomilkData> | null {
         }
     }
 
-    // Convert Freezing Point (crioscopia): 53.00 -> -0.530
+    // Convert Freezing Point (crioscopia) from Celsius to Hortvet: 53.00 -> -0.530 °C -> -0.549 °H
     let crioscopia = '';
     if (fpRaw) {
         const fpNum = parseFloat(fpRaw);
         if (!isNaN(fpNum)) {
-            crioscopia = (-fpNum / 100).toFixed(3);
+            const tempC = -fpNum / 100;
+            const tempH = tempC * 1.0356;
+            crioscopia = tempH.toFixed(3);
         }
     }
 
@@ -145,12 +147,14 @@ export class EkomilkSerialReceiver {
                     }
                 }
 
-                // Conversão de Crioscopia (ex: 53.00 -> -0.530)
+                // Conversão de Crioscopia de Celsius para Hortvet (ex: 53.00 -> -0.530 °C -> -0.549 °H)
                 let crioscopia = '';
                 if (fpRaw) {
                     const fpNum = parseFloat(fpRaw);
                     if (!isNaN(fpNum)) {
-                        crioscopia = (-fpNum / 100).toFixed(3);
+                        const tempC = -fpNum / 100;
+                        const tempH = tempC * 1.0356;
+                        crioscopia = tempH.toFixed(3);
                     }
                 }
 
