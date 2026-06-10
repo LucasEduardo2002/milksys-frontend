@@ -14,7 +14,7 @@ export function parseEkomilkData(text: string): Partial<EkomilkData> | null {
     const fatMatch = text.match(/(?:FAT|F):\s*([\d.,]+)/i);
     const snfMatch = text.match(/(?:SNF|S):\s*([\d.,]+)/i);
     const denMatch = text.match(/(?:DEN|D):\s*([\d.,]+)/i);
-    const fpMatch = text.match(/FP:\s*([\d.,]+)/i);
+    const fpMatch = text.match(/FP:\s*(-?[\d.,]+)/i);
     const protMatch = text.match(/(?:PROT|P):\s*([\d.,]+)/i);
     const lacMatch = text.match(/(?:LAC|L):\s*([\d.,]+)/i);
 
@@ -39,11 +39,13 @@ export function parseEkomilkData(text: string): Partial<EkomilkData> | null {
     }
 
     // Convert Freezing Point (crioscopia) from Celsius to Hortvet: 53.00 -> -0.530 °C -> -0.549 °H
+    // Supports both shifted format (53.00) and standard decimal format (-0.530)
     let crioscopia = '';
     if (fpRaw) {
         const fpNum = parseFloat(fpRaw);
         if (!isNaN(fpNum)) {
-            const tempC = -fpNum / 100;
+            const absVal = Math.abs(fpNum);
+            const tempC = -(absVal > 2.0 ? absVal / 100 : absVal);
             const tempH = tempC * 1.0356;
             crioscopia = tempH.toFixed(3);
         }
@@ -148,11 +150,13 @@ export class EkomilkSerialReceiver {
                 }
 
                 // Conversão de Crioscopia de Celsius para Hortvet (ex: 53.00 -> -0.530 °C -> -0.549 °H)
+                // Suporta tanto o formato deslocado (53.00) quanto o decimal padrão (-0.530)
                 let crioscopia = '';
                 if (fpRaw) {
                     const fpNum = parseFloat(fpRaw);
                     if (!isNaN(fpNum)) {
-                        const tempC = -fpNum / 100;
+                        const absVal = Math.abs(fpNum);
+                        const tempC = -(absVal > 2.0 ? absVal / 100 : absVal);
                         const tempH = tempC * 1.0356;
                         crioscopia = tempH.toFixed(3);
                     }
