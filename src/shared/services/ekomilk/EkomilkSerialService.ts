@@ -38,18 +38,8 @@ export function parseEkomilkData(text: string): Partial<EkomilkData> | null {
         }
     }
 
-    // Convert Freezing Point (crioscopia) from Celsius to Hortvet: 53.00 -> -0.530 °C -> -0.549 °H
-    // Supports both shifted format (53.00) and standard decimal format (-0.530)
+    // Crioscopia enviada pelo Ekomilk é ignorada a pedido do usuário (para cadastro manual)
     let crioscopia = '';
-    if (fpRaw) {
-        const fpNum = parseFloat(fpRaw);
-        if (!isNaN(fpNum)) {
-            const absVal = Math.abs(fpNum);
-            const tempC = -(absVal > 2.0 ? absVal / 100 : absVal);
-            const tempH = tempC * 1.0356;
-            crioscopia = tempH.toFixed(3);
-        }
-    }
 
     // Calculate EST: gordura + ESD
     let est = '';
@@ -149,18 +139,8 @@ export class EkomilkSerialReceiver {
                     }
                 }
 
-                // Conversão de Crioscopia de Celsius para Hortvet (ex: 53.00 -> -0.530 °C -> -0.549 °H)
-                // Suporta tanto o formato deslocado (53.00) quanto o decimal padrão (-0.530)
+                // Crioscopia enviada pelo Ekomilk é ignorada a pedido do usuário (para cadastro manual)
                 let crioscopia = '';
-                if (fpRaw) {
-                    const fpNum = parseFloat(fpRaw);
-                    if (!isNaN(fpNum)) {
-                        const absVal = Math.abs(fpNum);
-                        const tempC = -(absVal > 2.0 ? absVal / 100 : absVal);
-                        const tempH = tempC * 1.0356;
-                        crioscopia = tempH.toFixed(3);
-                    }
-                }
 
                 // Cálculo de EST
                 let est = '';
