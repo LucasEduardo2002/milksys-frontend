@@ -649,8 +649,66 @@ export const PaginaInicial: React.FC = () => {
         }
     }, [serialStatus, baudRate, serialProfile, showSnackbar]);
 
+    const serialStatusRef = React.useRef(serialStatus);
     React.useEffect(() => {
+        serialStatusRef.current = serialStatus;
+    }, [serialStatus]);
+
+    const baudRateRef = React.useRef(baudRate);
+    const serialProfileRef = React.useRef(serialProfile);
+    const showSnackbarRef = React.useRef(showSnackbar);
+
+    React.useEffect(() => {
+        baudRateRef.current = baudRate;
+        serialProfileRef.current = serialProfile;
+        showSnackbarRef.current = showSnackbar;
+    }, [baudRate, serialProfile, showSnackbar]);
+
+    // Auto-connect and serial connection event listeners
+    React.useEffect(() => {
+        if (!('serial' in navigator)) return;
+
+        const attemptAutoConnect = async () => {
+            if (serialStatusRef.current === 'connected' || serialStatusRef.current === 'connecting') return;
+            try {
+                const service = new EkomilkSerialService(
+                    (data) => {
+                        handleEkomilkDataRef.current(data);
+                    },
+                    (status) => {
+                        setSerialStatus(status);
+                    }
+                );
+                serialServiceRef.current = service;
+                const success = await service.connectAuto(baudRateRef.current, serialProfileRef.current);
+                if (success) {
+                    showSnackbarRef.current("Ekomilk M auto-conectado com sucesso.", "success");
+                }
+            } catch (err) {
+                console.error("Auto-connect failed:", err);
+            }
+        };
+
+        // Attempt connect on load
+        attemptAutoConnect();
+
+        const handleConnect = () => {
+            attemptAutoConnect();
+        };
+
+        const handleDisconnect = async () => {
+            if (serialServiceRef.current) {
+                await serialServiceRef.current.disconnect();
+                showSnackbarRef.current("Ekomilk M desconectado física ou logicamente.", "info");
+            }
+        };
+
+        (navigator as any).serial.addEventListener('connect', handleConnect);
+        (navigator as any).serial.addEventListener('disconnect', handleDisconnect);
+
         return () => {
+            (navigator as any).serial.removeEventListener('connect', handleConnect);
+            (navigator as any).serial.removeEventListener('disconnect', handleDisconnect);
             if (serialServiceRef.current) {
                 serialServiceRef.current.disconnect();
             }

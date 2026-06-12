@@ -199,7 +199,7 @@ export class EkomilkSerialService {
         this.receiver = new EkomilkSerialReceiver(this.onData);
     }
 
-    public async connect(baudRate: number = 2400, profile: '8N1' | '7E1' | '8E1' = '8N1'): Promise<void> {
+    public async connect(baudRate: number = 1200, profile: '8N1' | '7E1' | '8E1' = '8E1'): Promise<void> {
         if (!('serial' in navigator)) {
             this.onStatusChange('error');
             throw new Error('Web Serial API não é suportada neste navegador.');
@@ -238,6 +238,49 @@ export class EkomilkSerialService {
             this.port = null;
             throw error;
         }
+    }
+
+    public async connectAuto(baudRate: number = 1200, profile: '8N1' | '7E1' | '8E1' = '8E1'): Promise<boolean> {
+        if (!('serial' in navigator)) {
+            return false;
+        }
+
+        const dataBits = profile === '7E1' ? 7 : 8;
+        const parity = (profile === '7E1' || profile === '8E1') ? 'even' : 'none';
+
+        try {
+            const ports = await (navigator as any).serial.getPorts();
+            if (ports && ports.length > 0) {
+                this.onStatusChange('connecting');
+                this.port = ports[0];
+                await this.port.open({ 
+                    baudRate,
+                    dataBits,
+                    stopBits: 1,
+                    parity,
+                    flowControl: 'none'
+                });
+
+                try {
+                    if (this.port.setSignals) {
+                        const dtrRts = (profile === '8N1') ? true : false;
+                        await this.port.setSignals({ dataTerminalReady: dtrRts, requestToSend: dtrRts });
+                    }
+                } catch (sigError) {
+                    console.warn('Não foi possível definir sinais DTR/RTS:', sigError);
+                }
+
+                this.onStatusChange('connected');
+                this.keepReading = true;
+                this.readLoop();
+                return true;
+            }
+        } catch (error) {
+            console.error('Erro ao auto-conectar à porta serial:', error);
+            this.onStatusChange('disconnected');
+            this.port = null;
+        }
+        return false;
     }
 
     private async readLoop(): Promise<void> {
